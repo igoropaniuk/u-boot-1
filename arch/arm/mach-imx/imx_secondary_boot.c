@@ -15,28 +15,36 @@
 static int do_secondary_boot(cmd_tbl_t *cmdtp, int flag,
 			     int argc, char * const argv[])
 {
-	u32 persist_secondary = 0;
+	u32 secondary = 0;
 
-	if (argc < 2)
-		return CMD_RET_USAGE;
+	/* If we just want to retrieve current value */
+	if (argc == 1) {
+		secondary = call_imx_sip(IMX_SIP_SRC,
+					 IMX_SIP_SRC_IS_SECONDARY_BOOT, 0,
+					 0, 0);
 
-	persist_secondary = simple_strtoul(argv[1], NULL, 10);
+		printf("secondary flag = %d\n", secondary);
+		if (secondary)
+			return CMD_RET_SUCCESS;
+		return CMD_RET_FAILURE;
+	}
 
-	if (!(persist_secondary == 0 || persist_secondary == 1))
+	secondary = simple_strtoul(argv[1], NULL, 10);
+
+	if (!(secondary == 0 || secondary == 1))
 		return CMD_RET_USAGE;
 
 	call_imx_sip(IMX_SIP_SRC, IMX_SIP_SRC_SET_SECONDARY_BOOT,
-		     persist_secondary, 0, 0);
-
-	printf("Set PERSIST_SECONDARY_BOOT = %d\n", persist_secondary);
+		     secondary, 0, 0);
 
 	return CMD_RET_SUCCESS;
 }
 
 U_BOOT_CMD(
 	secondary_boot, CONFIG_SYS_MAXARGS, 1, do_secondary_boot,
-	"Set PERSIST_SECONDARY_BOOT bit",
+	"Get/Set PERSIST_SECONDARY_BOOT bit",
 	"[0|1]\n"
-	"   0 - boot primary image\n"
-	"   1 - boot secondary image\n"
+	"   no param  - get current bit value\n"
+	"   0 - set primary image\n"
+	"   1 - set secondary image\n"
 );
