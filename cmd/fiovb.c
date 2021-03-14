@@ -142,11 +142,76 @@ int do_fiovb_delete_pvalue(cmd_tbl_t *cmdtp, int flag, int argc,
 	return CMD_RET_FAILURE;
 }
 
+int do_is_secondary_boot(cmd_tbl_t *cmdtp, int flag, int argc,
+			 char * const argv[])
+{
+	int secondary;
+	char fiovb_val[2] = { 0 };
+	int ret;
+
+	if (!fiovb_ops) {
+		printf("Foundries.IO Verified Boot is not initialized, run 'fiovb init' first\n");
+		return CMD_RET_FAILURE;
+	}
+
+	if (argc != 1)
+		return CMD_RET_USAGE;
+
+	if (fiovb_ops->secondary_boot(fiovb_ops, &secondary, false) ==
+	    FIOVB_IO_RESULT_OK) {
+		printf("Secondary boot bit = %d\n", secondary);
+		ret = snprintf(fiovb_val, sizeof(fiovb_val), "%d", secondary);
+		if (ret < 0)
+			return CMD_RET_FAILURE;
+
+		ret = env_set("fiovb.is_secondary_boot", fiovb_val);
+		if (ret)
+			return CMD_RET_FAILURE;
+
+		return CMD_RET_SUCCESS;
+	}
+
+	return CMD_RET_FAILURE;
+}
+
+int do_set_secondary_boot(cmd_tbl_t *cmdtp, int flag, int argc,
+			 char * const argv[])
+{
+	int secondary = 0;
+
+	if (!fiovb_ops) {
+		printf("Foundries.IO Verified Boot is not initialized, run 'fiovb init' first\n");
+		return CMD_RET_FAILURE;
+	}
+
+	if (argc != 2)
+		return CMD_RET_USAGE;
+
+	secondary = simple_strtoul(argv[1], NULL, 10);
+
+	if (!(secondary == 0 || secondary == 1))
+		return CMD_RET_USAGE;
+
+	if (fiovb_ops->secondary_boot(fiovb_ops, &secondary, true) ==
+	    FIOVB_IO_RESULT_OK) {
+		printf("Secondary boot bit is set to %d\n", secondary);
+		/*
+		 * we don't update env with new value, as it
+		 * becomes actual after reboot
+		 */
+		return CMD_RET_SUCCESS;
+	}
+
+	return CMD_RET_FAILURE;
+}
+
 static cmd_tbl_t cmd_fiovb[] = {
 	U_BOOT_CMD_MKENT(init, 2, 0, do_fiovb_init, "", ""),
 	U_BOOT_CMD_MKENT(read_pvalue, 3, 0, do_fiovb_read_pvalue, "", ""),
 	U_BOOT_CMD_MKENT(write_pvalue, 3, 0, do_fiovb_write_pvalue, "", ""),
 	U_BOOT_CMD_MKENT(delete_pvalue, 2, 0, do_fiovb_delete_pvalue, "", ""),
+	U_BOOT_CMD_MKENT(is_secondary_boot, 1, 0, do_is_secondary_boot, "", ""),
+	U_BOOT_CMD_MKENT(set_secondary_boot, 2, 0, do_set_secondary_boot, "", ""),
 };
 
 static int do_fiovb(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -175,4 +240,6 @@ U_BOOT_CMD(
 	"read_pvalue <name> <bytes> - read a persistent value <name>\n"
 	"write_pvalue <name> <value> - write a persistent value <name>\n"
 	"delete_pvalue <name> - delete a persistent value <name>\n"
+	"is_secondary_boot - check if we're booting secondary image\n"
+	"set_secondary_boot [0|1] - set secondary boot flag\n"
 	);

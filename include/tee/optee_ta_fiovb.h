@@ -33,5 +33,18 @@
  * in	params[0].memref:	persistent value name
  */
 #define TA_FIOVB_CMD_DELETE_PERSIST_VALUE	2
+/*
+ * Set secondary boot bit
+ *
+ * inout params[0].value.a:	value of secondary bit to set
+ */
+#define TA_FIOVB_CMD_SET_SECONDARY_BOOT		3
+/*
+ * Check if the secondary bit is set
+ *
+ * inout params[0].value.a:	store current value of secondary bit
+ */
+#define TA_FIOVB_CMD_IS_SECONDARY_BOOT		4
+
 
 #endif /*__TA_FIOVB_H*/

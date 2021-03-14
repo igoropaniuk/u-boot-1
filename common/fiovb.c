@@ -227,6 +227,34 @@ static fiovb_io_result delete_persistent_value(struct fiovb_ops *ops,
 	return rc;
 }
 
+static fiovb_io_result secondary_boot(struct fiovb_ops *ops,
+				      int *secondary_boot,
+				      bool update)
+{
+	fiovb_io_result rc;
+	struct tee_param param = { .attr = TEE_PARAM_ATTR_TYPE_VALUE_INOUT };
+	struct udevice *tee;
+	u32 cmd;
+
+	if (get_open_session(ops->user_data))
+		return FIOVB_IO_RESULT_ERROR_IO;
+
+	tee = ((struct fiovb_ops_data *)ops->user_data)->tee;
+
+	param.u.value.a = *secondary_boot;
+
+	if (update)
+		cmd = TA_FIOVB_CMD_SET_SECONDARY_BOOT;
+	else
+		cmd = TA_FIOVB_CMD_IS_SECONDARY_BOOT;
+
+	rc = invoke_func(ops->user_data, cmd, 1, &param);
+
+	*secondary_boot = param.u.value.a;
+
+	return rc;
+}
+
 struct fiovb_ops *fiovb_ops_alloc(int boot_device)
 {
 	struct fiovb_ops_data *ops_data;
@@ -240,6 +268,7 @@ struct fiovb_ops *fiovb_ops_alloc(int boot_device)
 	ops_data->ops.delete_persistent_value = delete_persistent_value;
 	ops_data->ops.write_persistent_value = write_persistent_value;
 	ops_data->ops.read_persistent_value = read_persistent_value;
+	ops_data->ops.secondary_boot = secondary_boot;
 	ops_data->mmc_dev = boot_device;
 
 	return &ops_data->ops;

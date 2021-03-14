@@ -50,6 +50,10 @@ struct fiovb_ops {
 
   fiovb_io_result (*delete_persistent_value)(struct fiovb_ops* ops,
                                              const char* name);
+
+  fiovb_io_result (*secondary_boot)(struct fiovb_ops* ops,
+                                    int* secondary_boot,
+                                    bool update);
 };
 
 struct fiovb_ops_data {
