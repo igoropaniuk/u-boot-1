@@ -93,20 +93,3 @@ U_BOOT_CMD(
 	imx_is_closed, CONFIG_SYS_MAXARGS, 1, do_imx_is_closed,
 	"Check if the board is closed", ""
 );
-
-
-#if CONFIG_IS_ENABLED(ARCH_IMX8M)
-static int do_warm_reset(cmd_tbl_t *cmdtp, int flag,
-			 int argc, char * const argv[])
-{
-	arm_smccc_smc(IMX_SIP_WARM_RESET, 0, 0, 0, 0, 0, 0, 0, NULL);
-
-	return CMD_RET_SUCCESS;
-}
-
-U_BOOT_CMD(
-	imx_warm_reset, CONFIG_SYS_MAXARGS, 1, do_warm_reset,
-	"Assert WDOG Software Reset Signal (internal reset) via TF-A",
-	"\n"
-);
-#endif /* CONFIG_IS_ENABLED(ARCH_IMX8M) */
